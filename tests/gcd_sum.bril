@@ -1,0 +1,38 @@
+@main(n: int) {
+  one: int = const 1;
+  i: int = const 1;
+  total: int = const 0;
+.outer:
+  c: bool = le i n;
+  br c .outer.body .done;
+.outer.body:
+  j: int = const 1;
+.inner:
+  d: bool = le j i;
+  br d .inner.body .inner.done;
+.inner.body:
+  g: int = call @gcd i j;
+  total: int = add total g;
+  j: int = add j one;
+  jmp .inner;
+.inner.done:
+  i: int = add i one;
+  jmp .outer;
+.done:
+  print total;
+}
+@gcd(a: int, b: int): int {
+  zero: int = const 0;
+.loop:
+  c: bool = eq b zero;
+  br c .end .body;
+.body:
+  q: int = div a b;
+  m: int = mul q b;
+  r: int = sub a m;
+  a: int = id b;
+  b: int = id r;
+  jmp .loop;
+.end:
+  ret a;
+}

@@ -1,0 +1,150 @@
+{
+  "comment": [
+    "Every graded test case for HW4. All of them ship in this repository:",
+    "there are no hidden cases. The evaluator in tools/ is the same one the",
+    "TAs grade with, so `bash verify_hw4.sh <id> test` gives you your score.",
+    "",
+    "A case passes if the program your driver produces is in SSA form and",
+    "prints the same output, with the same exit status, as the original on",
+    "every argument set listed in 'arg_sets'."
+  ],
+  "cases": [
+    {
+      "id": "simple",
+      "file": "tests/simple.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        []
+      ]
+    },
+    {
+      "id": "loop",
+      "file": "tests/loop.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        []
+      ]
+    },
+    {
+      "id": "self_loop",
+      "file": "tests/self_loop.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        []
+      ]
+    },
+    {
+      "id": "example",
+      "file": "tests/example.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        []
+      ]
+    },
+    {
+      "id": "while",
+      "file": "tests/while.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        [
+          100
+        ],
+        [
+          1
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "id": "factors",
+      "file": "tests/factors.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        [
+          60
+        ],
+        [
+          97
+        ],
+        [
+          360
+        ]
+      ]
+    },
+    {
+      "id": "reverse",
+      "file": "tests/reverse.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        [
+          123
+        ],
+        [
+          1000
+        ],
+        [
+          7
+        ]
+      ]
+    },
+    {
+      "id": "pascals_rows",
+      "file": "tests/pascals_rows.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        []
+      ]
+    },
+    {
+      "id": "diamond",
+      "file": "tests/diamond.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        [
+          3,
+          10
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "id": "gcd_sum",
+      "file": "tests/gcd_sum.bril",
+      "category": "ssa_construction",
+      "points": 10,
+      "arg_sets": [
+        [
+          1
+        ],
+        [
+          6
+        ],
+        [
+          12
+        ]
+      ]
+    }
+  ]
+}

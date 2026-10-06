@@ -1,0 +1,22 @@
+@main(a: int, b: int) {
+  zero: int = const 0;
+  x: int = const 1;
+  y: int = id a;
+  c: bool = lt a b;
+  br c .then .else;
+.then:
+  x: int = add x b;
+  d: bool = gt y zero;
+  br d .inner .join;
+.inner:
+  y: int = sub y x;
+  x: int = mul x x;
+  jmp .join;
+.else:
+  y: int = add y b;
+  jmp .join;
+.join:
+  x: int = add x y;
+  print x;
+  print y;
+}

@@ -1,0 +1,135 @@
+# Build and publish the HW4 homework image.
+#
+# Manual trigger only: this pushes the image students download, so it
+# should never fire by accident.
+#
+# It builds linux/amd64 and linux/arm64. arm64 matters because the HW1
+# image is multi-arch and most students are on Apple Silicon; shipping
+# amd64 only would put them on an emulated path that HW1 never used.
+#
+# Before the first run:
+#   1. push this repository to the NTU-Advanced-Compiler organization
+#   2. run this workflow from the Actions tab
+#   3. make the resulting package public:
+#      repo -> Packages -> acd-hw4 -> Package settings -> Change visibility
+#
+# After the run, copy the digest from the summary and pin it for grading.
+name: Publish homework image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag'
+        required: true
+        default: '2026'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out the repository and the pinned Bril submodule
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # ghcr.io rejects uppercase names, and the organization is spelled
+      # NTU-Advanced-Compiler, so the owner has to be lowercased.
+      - name: Compute the image reference
+        id: ref
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${owner}/acd-hw4" >> "$GITHUB_OUTPUT"
+          echo "Image will be ghcr.io/${owner}/acd-hw4:${{ inputs.tag }}"
+
+      # QEMU lets this amd64 runner both build and RUN arm64 containers.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The Dockerfile pins the HW1 base by a manifest-list digest, so it
+      # resolves to the right architecture for each platform on its own.
+      # Its baked-in smoke test runs during the build, which means an
+      # arm64 build that succeeds has already proved bril2json and brili
+      # work natively on arm64.
+      - name: Build and push, both architectures
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.ref.outputs.image }}:${{ inputs.tag }}
+          provenance: false
+
+      - name: Confirm both architectures are in the published manifest
+        run: |
+          set -eux
+          docker buildx imagetools inspect \
+            "${{ steps.ref.outputs.image }}:${{ inputs.tag }}"
+
+      # Run the real self-check under each architecture. The starter
+      # does not construct SSA yet, so 0 is the expected score. What this
+      # step proves is that the evaluator ran every case to a verdict and
+      # that the original programs run under brili on that platform.
+      - name: Self-check on each architecture
+        run: |
+          set -eu
+          for platform in linux/amd64 linux/arm64; do
+            echo "::group::$platform"
+            # An emulated arm64 container is much slower than a native
+            # one, so each pipeline stage gets more time there. This is a
+            # property of QEMU on an amd64 runner, not of the environment
+            # a student or a TA actually grades in.
+            case "$platform" in
+              linux/arm64) stage_timeout=120 ;;
+              *)           stage_timeout=10  ;;
+            esac
+            docker run --rm --platform "$platform" \
+              -v "$PWD":/work:ro -w /work \
+              "${{ steps.ref.outputs.image }}:${{ inputs.tag }}" \
+              python3 tools/selfcheck.py --timeout "$stage_timeout" --json \
+              > report.json || true
+            # selfcheck exits non-zero whenever the score is short of
+            # full marks, which is the expected case here. The check
+            # below is what decides the step, and it fails loudly if
+            # report.json is missing or malformed.
+            python3 -c "import json,sys;r=json.load(open('report.json'));[print('  FAILED',x['id'],'::',' | '.join(x['messages'])) for x in r['results'] if not x['passed']];print('$platform starter score:',r['score'],'/',r['max_score']);sys.exit(0 if (r['score'],r['max_score'])==(0,100) else 1)"
+            docker run --rm --platform "$platform" \
+              -v "$PWD":/work:ro -w /work \
+              "${{ steps.ref.outputs.image }}:${{ inputs.tag }}" \
+              bash -euo pipefail -c 'for t in tests/*.bril; do bril2json < "$t" | bril2txt | bril2json > /dev/null; done; test "$(bril2json < tests/simple.bril | brili)" = 5'
+            echo "::endgroup::"
+          done
+
+      - name: Summary
+        run: |
+          {
+            echo "## Published"
+            echo
+            echo '```'
+            echo "docker pull ${{ steps.ref.outputs.image }}:${{ inputs.tag }}"
+            echo '```'
+            echo
+            echo "**Digest to pin for grading:** \`${{ steps.build.outputs.digest }}\`"
+            echo
+            echo "Both linux/amd64 and linux/arm64 ran the self-check and scored 0/100,"
+            echo "which is the expected score for the unmodified starter."
+            echo
+            echo "If this is the first publish, make the package public:"
+            echo "repo -> Packages -> acd-hw4 -> Package settings -> Change visibility."
+          } >> "$GITHUB_STEP_SUMMARY"
