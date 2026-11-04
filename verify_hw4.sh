@@ -62,7 +62,7 @@ require_tools() {
         echo
         echo "Run this script inside the HW4 container, where the Bril tools"
         echo "are already installed:"
-        echo "  docker run -it --rm -v \"\$PWD\":/home/student/hw acd-hw4:2026"
+        echo "  docker run -it --rm -v \"\$PWD\":/home/student/hw ghcr.io/ntu-advanced-compiler/acd-hw4:2026"
         exit 1
     fi
 }
