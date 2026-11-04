@@ -41,7 +41,6 @@ homework-directory/
 │   └── manifest.json
 ├── tools/
 ├── bril/
-├── run_test_case.sh
 ├── verify_hw4.sh
 ├── Dockerfile
 └── README.md
@@ -64,9 +63,9 @@ bash verify_hw4.sh <student-id> test
 ```
 All graded test cases are in this repository, so this reports the score you will receive. `tests/manifest.json` lists each case and the arguments it is run with.
 
-2. To check a single test case, optionally with program arguments:
+2. To check a single graded case:
 ```bash
-bash run_test_case.sh ./tests/[your_test_program].bril [arguments]
+python3 tools/selfcheck.py --case while
 ```
 3. To generate the SSA form of your program:
 ```bash
